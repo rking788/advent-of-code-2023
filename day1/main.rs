@@ -12,12 +12,9 @@ fn main() {
 fn sum_calibration_values(filename: &str) -> u64 {
 
     let mut sum = 0u64;
-    let mut lineNum = 1;
 
     for line in read_lines(filename) {
-        println!("Line {:?}", lineNum);
         sum += find_line_calibration_value(line.unwrap()) as u64;
-        lineNum += 1;
     }
 
     return sum;
@@ -41,7 +38,6 @@ fn find_line_calibration_value(line: String) -> u32 {
             buf.push(char);
 
             let s = buf.clone().into_iter().collect::<String>();
-            println!("Buf so far = {}", s);
             if s == "zero" || s.ends_with("zero") {
                 temp_digit = Some(0u32);
             } else if s == "one" || s.ends_with("one") {
