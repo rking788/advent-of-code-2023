@@ -3,39 +3,33 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 struct GameConfig {
-    red: i32,
-    green: i32,
-    blue: i32,
+    red: u64,
+    green: u64,
+    blue: u64,
 }
 
 struct DiceRoll {
-    red: Option<i32>,
-    green: Option<i32>,
-    blue: Option<i32>
+    red: Option<u64>,
+    green: Option<u64>,
+    blue: Option<u64>
 }
 
 fn main() {
 
-    let config = GameConfig{red: 12, green: 13, blue: 14};
-    let total = sum_valid_ids("day2.txt", config);
-    println!("Valid game ID total: {}", total);
+    let total = sum_valid_ids("day2.txt");
+    println!("Game power total: {}", total);
 }
 
-fn sum_valid_ids(filename: &str, config: GameConfig) -> u64 {
+fn sum_valid_ids(filename: &str) -> u64 {
 
     let mut sum = 0u64;
 
     for line in read_lines(filename) {
         let safe_line = line.unwrap();
         let (game_piece, dice_piece) = safe_line.split_once(":").unwrap();
-        let game_id_as_num = parse_game_id(game_piece);
+        let _ = parse_game_id(game_piece);
 
-        let is_valid = is_game_valid(&config, dice_piece);
-        if is_valid {
-            sum += game_id_as_num;
-        } else {
-            println!("Invalid game ID : {}", game_id_as_num);
-        }
+        sum += calculate_game_power(dice_piece);
     }
 
     return sum;
@@ -47,20 +41,23 @@ fn parse_game_id(name: &str) -> u64 {
     return id_str.parse::<u64>().unwrap();
 }
 
-fn is_game_valid(config: &GameConfig, line: &str) ->  bool {
+fn calculate_game_power(line: &str) ->  u64 {
 
+    // This is a bit of a hack since we know the power is a product so using 1 here will not
+    // impact the power calculation
+    let mut config = GameConfig{red: 1u64, green: 1u64, blue: 1u64};
     let dice_rolls = parse_dice(line);
     for roll in dice_rolls {
         if roll.red.is_some() && roll.red.unwrap() > config.red {
-            return false;
+            config.red = roll.red.unwrap();
         } else if roll.green.is_some() && roll.green.unwrap() > config.green {
-            return false;
+            config.green = roll.green.unwrap();
         } else if roll.blue.is_some() && roll.blue.unwrap() > config.blue {
-            return false;
+            config.blue = roll.blue.unwrap();
         }
     }
 
-    return true;
+    return config.red * config.green * config.blue;
 }
 
 fn parse_dice(line: &str) -> Vec<DiceRoll> {
@@ -70,7 +67,7 @@ fn parse_dice(line: &str) -> Vec<DiceRoll> {
         for dice in choice.split(",") {
             let (temp_value, color) = dice.trim().split_once(" ").unwrap();
             let mut roll = DiceRoll{red: None, green: None, blue: None};
-            let value = temp_value.parse::<i32>().unwrap();
+            let value = temp_value.parse::<u64>().unwrap();
             match color {
                 "red" => roll.red = Some(value),
                 "green" => roll.green = Some(value),
